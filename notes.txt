@@ -1,0 +1,20 @@
+:::<Jan 3, 2012>
+created directory
+	$  cd data/raw
+	$  cat *_data.csv > 2002-2011_nfl_pbp_data.scv
+	then vi file, and delete the extra headers...
+
+created inOutTemplate.pl
+
+:::<Jan 4, 2012> 
+$cat /home/adam/sandbox/nflAbbv.txt | sed 's/\t/\,/g' | perl -e 'while($f=<>){chomp($f);$n=(split " ",(split ",", $f)[1])[-1];$n=lc($n);print "${f},${n}\n";}'> ../data/nflClubInfo.csv
+
+grep "players" 20021007_GB@CHI.html | grep "\"}," | grep "\"home\""|perl -e '$p = <>;$p=~s/\"\}\,\"/\n/g;print $p'
+
+ grep "players" *.html | grep "\"}," | grep "\"home\""|perl -e 'while($p = <>){$p=~s/\"\}\,\"/\n/g;print $p}'|grep Tom|grep Brady| sed 's/[\"],"/\n/g' | sed s'/\":\"/\n/g' | sed 's/\":/\n/g'
+
+
+downloaded nfl.com's game information, which contains rosters, weather, and other information in embedded JS data structures.
+
+$ perl addDateAndTeamInfoPlayType.pl -i  ../data/2002-2011_nfl_pbp_data.csv -o ../data/2002-2011_nfl_play_type.csv
+
