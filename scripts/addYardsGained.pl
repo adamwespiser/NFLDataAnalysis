@@ -23,28 +23,36 @@ my $lastPos = "";
 my $lastGame = "";
 my $driveId = 0;
 my $lastydline = 0;
-
+my $lastHalf = "";
 my $header = <$in>;
 $header =~ s/\n//g;
-print $out $header.",driveId,penaltyStatus,noplay,yardsGained,fgStatus,turnoverEvent,twoPointAttempt\n";
+print $out $header.",driveId,penaltyStatus,noplay,yardsGained,fgStatus,turnoverEvent,twoPointAttempt,half\n";
 while (defined(my $line =<$in>)){
   $line=~s/\n//g;
   my @line = split ',',$line;
   my ($gameid,$qtr,$min,$sec,$off,$def,$down,$togo,$ydline,$description,$offscore,$defscore,$season,$home,$away, $year, $month, $day, $playType) = @line;
 
+	$description = &handleReverseCalls($description);
+	$playType =  &determinePlayType($description);
 	my $penaltyStatus = &determinePenaltyStatus($description);
 	my $yardsGained = &determineYardsGained($description, $playType);
 	my $fieldGoalStatus = &getFieldGoalStatus($description, $playType);
   my $extraPoint      = &determine2ptConv($description);
+  my $half            = &getHalfFromQuater($qtr);
 
 	my $drive = 'NA';
 	my $netYardChange = 0;
-	if ($lastPos eq $def and $lastGame eq $gameid){
+	# update driveID if onside kick(pocession won't change)
+	if ($playType eq "onsideKick" or $playType eq "kickoff"){
+		 $driveId++;
+  } 
+	if ($lastPos eq $def and $lastGame eq $gameid and $half eq $lastHalf){
     $drive = $driveId;
 		$netYardChange = $ydline - $lastydline;
   } else {
 		$lastPos = $def;
 		$lastGame = $gameid;
+		$lastHalf = $half;
 		$driveId++;
 		$drive = $driveId;
 
@@ -52,12 +60,12 @@ while (defined(my $line =<$in>)){
   }
   my $noplay = &getNoPlayStatus($description);
 	my $fumble = &determineTurnoverEvent($description);
-	#print "${playType} status=${fumble} down=${down} togo=${togo} gain=${yardsGained} desc=${description}\n";
+	#print "${playType} status=${fumble} drive=${driveId} DEF=${def}  OFF=${off} desc=${description}\n";
 
 
   $lastydline = $ydline;
 
-	 print $out join(',',@line,$driveId,$penaltyStatus, $noplay, $yardsGained, $fieldGoalStatus, $fumble,$extraPoint)."\n";
+	print $out join(',',$gameid,$qtr,$min,$sec,$off,$def,$down,$togo,$ydline,$description,$offscore,$defscore,$season,$home,$away, $year, $month, $day, $playType,$driveId,$penaltyStatus, $noplay, $yardsGained, $fieldGoalStatus, $fumble,$extraPoint,$half)."\n";
 #print "${drive} ${playType} down=${down} togo= ${togo} gained= ${yardsGained}  offscore= ${offscore} ${description}\n";
 	#print "${drive} ${off} ${playType} yd=${ydline} time=(${min}:${sec}) offscore=$offscore ${gameid}  ${description}\n";
 

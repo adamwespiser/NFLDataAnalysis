@@ -25,11 +25,23 @@ sub getTeamAbrToLcHash(){
   return $lcToABR;
 }
 
+sub handleReverseCalls(){
+		my $desc = shift;
+		if ($desc =~ m/REVERSED/ ){
+				$desc =~ s/.*REVERSED.//g;
+				return $desc;
+		}
+		return $desc;
+}
+
+
+
 #play types: run, pass, incompletePass, punt, kickoff, extra-point,2pt,safety
 sub determinePlayType(){
 	my $desc = shift;
 	return "pass" if ($desc =~ m/ pass / or $desc =~ m/ passed incomplete/);
 	return "run" if ($desc =~ m/ up the middle | left end | right end | left tackle | right tackle | left guard | right guard | rushed / );
+	return "onsideKick" if ($desc =~ m/\sonside\s/ or $desc =~m/\(Onside Kick /);
 	return "kickoff" if ($desc !~ m/^\(/ and $desc =~ m/ kicks /);
    return "extraPoint" if ($desc =~ m/ extra point /);	
    return "field goal" if ($desc =~ m/ field goal /);
@@ -43,7 +55,7 @@ sub determinePlayType(){
    return "fumble" if ($desc =~ m/ FUMBLES /);
    return "twoPtConv" if ($desc =~ m/POINT CONVERSION ATTEMPT/);
    return "underReview" if ($desc =~ /play under review/);
-   return "onsideKickFormation" if ($desc =~ m/\(Onside Kick formation\)/ );
+	 #return "onsideKickFormation" if ($desc =~ m/\(Onside Kick formation\)/ );
    return "qbScramble" if ($desc =~ m/ scrambles /);
    #return "qbRun" if ($desc =~ m/[A-Za-z]+\sto\s[A-Z]+\sfor/);
    #if ($desc =~ m/(\d\d\)\s+\w\.\w+\sto\s[A-Z]+\s\d+)/){
@@ -65,6 +77,12 @@ sub determinePlayType(){
 	return "noneFound";
 }
 
+sub getHalfFromQuater(){
+		my $qtr = shift;
+		return "1" if ($qtr eq '1' or $qtr eq '2');
+		return "2" if ($qtr eq '3' or $qtr eq '4');
+		return "ot" if ($qtr eq '5');;
+}
 sub determinePenaltyStatus(){
 		my $desc = shift;
 		my $descLc = lc($desc);
