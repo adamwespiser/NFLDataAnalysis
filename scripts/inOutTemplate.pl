@@ -25,7 +25,7 @@ print $out $header;
 while (defined(my $line =<$in>)){
   $line=~s/\n//g;
   my @line = split ',',$line;
-  my ($gameid,$qtr,$min,$sec,$off,$def,$down,$togo,$ydline,$description,$offscore,$defscore,$season) = @line;
+  my ($gameid,$qtr,$min,$sec,$off,$def,$down,$togo,$ydline,$description,$offscore,$defscore,$season,$home,$away, $year, $month, $day, $playType) = @line;
   my ($home, $away) = &getHomeAwayTeamsFromGameId($gameid);   
   my ($year,$month,$day) = &getYearMonthDayFromGameId($gameid);
 

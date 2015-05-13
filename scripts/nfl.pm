@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-my $timeInfoFile = "/home/adam/programming/github/NFLDataAnalysis/data/nflClubInfo.csv";
+my $timeInfoFile = "./data/nflClubInfo.csv";
 
 sub getTeamLcToAbrHash(){
   open my $fh, '<', $timeInfoFile or print "cannot open $timeInfoFile\n\n";
@@ -65,7 +65,107 @@ sub determinePlayType(){
 	return "noneFound";
 }
 
+sub determinePenaltyStatus(){
+		my $desc = shift;
+		my $descLc = lc($desc);
+		if ($descLc =~ m/penalty/){
+				if ($descLc =~ m/enforced/){
+						return "enforced";
+				}
+				elsif ($descLc =~ m/declined/){
+						return "declined";
+				}
+				elsif ($descLc =~ m/offsetting/){
+						return "offset";
+				} else {
+						return "other";
+				}
+		}
+		return "none"
+		# penalty?
+		#		enforced, declined, none
+}
+sub determineYardsGained(){
+		my $desc = shift;
+		my $descLc = lc($desc);
+		my $playType = shift;
+		if ($playType eq "run") {
+				if ($descLc =~ m/fumble/){
+						return "NA";
+				}
+				if ($descLc =~ m/no gain/){
+						return 0;
+				}
+				if ($descLc =~ m/for\s+(-?\d+)\syards?/){
+						return $1;
+				}
+				return "NA";
+		}
+		if ($playType eq "pass"){
+				if ($descLc =~ m/intercepted/){
+						return "NA";
+				}
+				if ($descLc =~ m/incomplete/){
+						return 0;
+				} 
+				if ($descLc =~ m/for\s+(-?\d+)\syards?/){
+						return $1;
+				}
+				return "NA";
+		}
+		if ($playType eq "sack"){
+				if ($descLc =~ m/for\s+(-?\d+)\syards?/){
+						return $1;
+				}
+		}
+		if ($playType eq "field goal"){
+				if ($descLc =~ m/\s+(\d+)\syard field goal/){
+						return $1;
+				}
+		}
+		if ($playType eq "punt"){
+				if ($descLc =~ m/punts\s+(\d+)\syards? to/){
+						return $1;
+				}
+		}
+		if ($playType eq "kickoff"){
+				if ($descLc =~ m/kicks\s(\d+)\syards? from/){
+						return $1;
+				}
+		}
+		return "NA";
+}
 
+sub getNoPlayStatus(){
+		my $desc = shift;
+		my $descLc = lc($desc);
+		if ($descLc =~ m/no play/){
+				return "noplay";
+		}
+		return "play";
+}
+		
+
+
+sub getFieldGoalStatus(){
+		my $desc = shift;
+		my $playType = shift;
+		my $descLc = lc($desc);
+		if ($playType eq "field goal" or $playType eq "extraPoint"){
+				if ($descLc =~ m/is good/){
+						return "good";
+				} elsif ( $descLc =~ m/is no good/ ) {
+						return "nogood";
+				} elsif ( $descLc =~ m/is block/ ){
+						return "block";
+				}
+   }
+		return "NA"
+}
+
+
+# 1,2,5,10,19
+# intercept,end of half,fumble,turnover on downs,punt
 
 sub getYearMonthDayFromGameId(){
 	my $id = shift;

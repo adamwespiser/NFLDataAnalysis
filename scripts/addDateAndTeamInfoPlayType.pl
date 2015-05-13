@@ -38,6 +38,7 @@ while (defined(my $line =<$in>)){
   my ($year,$month,$day) = &getYearMonthDayFromGameId($gameid);
 
   my $playType =  &determinePlayType($description);
+
   print $out join(',',@line,$home,$away,$year,$month,$day,$playType)."\n";
   $total = $total + 1;
 ##  if ($playType ~~ "noneFound"){
