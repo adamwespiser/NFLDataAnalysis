@@ -65,7 +65,7 @@ getExpectedPointsForPosition(dt){
 		td.over = foverlaps(x=idx,y=td.td,by.y=c("endPos","startPos"), by.x=c("start","end"))
     td.sum = td.over[, .(td=sum(td)), .(start)]
 	
-    fg.td <- DT2[driveScore == 3L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)][ , .(fg=.N), .(endPos,startPos)]    
+    lfg.td <- DT2[driveScore == 3L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)][ , .(fg=.N), .(endPos,startPos)]    
 		#fg.td[,endPos:=0L]
     
     setkey(fg.td, endPos, startPos,fg)
@@ -83,4 +83,15 @@ getExpectedPointsForPosition(dt){
 		cum.td = cum.together.td[, .(expScoreCumm = (7*td + 3*fg)/(td + fg + empty), Ncumm = (td + fg + empty) ), .(start)]
 		
     start.td[cum.td]
-  
+}
+
+getAveYardsOnPlay <- function(dt){
+  DT2 <- dt
+  DTdrive <- DT2[!is.na(DT2$driveScore),]
+  DTdrive[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run", "pass" ,"sack")),.(median(as.integer(yardsGained))), .(ydline)][order(ydline)]
+  gainDistro = DTdrive[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run","pass","sack")),.(as.integer(yardsGained)), .(ydline,playType)][order(ydline)]
+  return dcast(gainDistro[ , .(sapply(1:20,function(x){sum(V1 >= x)/.N}),1:20), .(ydline)],ydline ~ V2,value.var="V1")
+
+}
+
+
