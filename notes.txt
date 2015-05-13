@@ -18,3 +18,8 @@ downloaded nfl.com's game information, which contains rosters, weather, and othe
 
 $ perl addDateAndTeamInfoPlayType.pl -i  ../data/2002-2011_nfl_pbp_data.csv -o ../data/2002-2011_nfl_play_type.csv
 
+
+export datadir="/home/adam/nfl/"
+perl ./scripts/addYardsGained.pl -i ./data/2002-2011_nfl_play_type.csv -o $datadir/2002-2011_nfl_play_type_plus.csv
+
+

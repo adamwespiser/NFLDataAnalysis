@@ -145,6 +145,35 @@ sub getNoPlayStatus(){
 		return "play";
 }
 		
+sub determineTurnoverEvent(){
+		my $desc = shift;
+		my $descLc = lc($desc);
+		#my $down   = shift;
+		#my $togo   = shift;
+		#my $yardsGained = shift;
+
+		if ($desc =~ m/SAFETY/){
+				return "safety";
+		}
+
+		if ($descLc =~ m/fumble/){
+				return "fumble";
+		}
+		if ($desc =~ m/INTERCEPTED/ ){
+				return "interception";
+		}
+		
+		
+	
+		return "none";
+}
+				
+								
+
+		#if ($offense eq "CLE")
+				
+
+
 
 
 sub getFieldGoalStatus(){

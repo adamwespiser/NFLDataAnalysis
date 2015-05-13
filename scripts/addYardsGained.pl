@@ -17,7 +17,7 @@ my ($in, $out);
 if (!defined $inFile){ print STDERR "\n\-i option was not specified\n";&usage;}
 if (!defined $outFile){ print STDERR "\n\-o option was not specified\n";&usage;}
 unless(open  $in, '<' ,$inFile){ print STDERR ("Could not open $inFile\n");&usage;}
-unless (open $out,'>', $outFile ){ print STDERR "Could not write to  $outFile\n";}
+unless (open $out,'>', $outFile ){ print STDERR "Could not write to  $outFile\n";&usage;}
 
 my $lastPos = "";
 my $lastGame = "";
@@ -25,7 +25,7 @@ my $driveId = 0;
 my $lastydline = 0;
 
 my $header = <$in>;
-print $out $header;
+print $out $header.",driveId,penaltyStatus,noplay,yardsGained,fgStatus,turnoverEvent\n";
 while (defined(my $line =<$in>)){
   $line=~s/\n//g;
   my @line = split ',',$line;
@@ -49,14 +49,15 @@ while (defined(my $line =<$in>)){
 		$netYardChange = 0;
   }
   my $noplay = &getNoPlayStatus($description);
-  print "${playType} status=${fieldGoalStatus} desc=${description}\n";
+	my $fumble = &determineTurnoverEvent($description);
+	#print "${playType} status=${fumble} down=${down} togo=${togo} gain=${yardsGained} desc=${description}\n";
 
 
   $lastydline = $ydline;
 
-	#print "${drive} ${playType} down=${down} togo= ${togo} gained= ${yardsGained}  offscore= ${offscore} ${description}\n";
+	 print $out join(',',@line,$driveId,$penaltyStatus, $noplay, $yardsGained, $fieldGoalStatus, $fumble)."\n";
+#print "${drive} ${playType} down=${down} togo= ${togo} gained= ${yardsGained}  offscore= ${offscore} ${description}\n";
 	#print "${drive} ${off} ${playType} yd=${ydline} time=(${min}:${sec}) offscore=$offscore ${gameid}  ${description}\n";
-
 
 	#print $out join(',',$line),"\n";
 }
