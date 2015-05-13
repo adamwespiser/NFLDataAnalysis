@@ -25,7 +25,8 @@ my $driveId = 0;
 my $lastydline = 0;
 
 my $header = <$in>;
-print $out $header.",driveId,penaltyStatus,noplay,yardsGained,fgStatus,turnoverEvent\n";
+$header =~ s/\n//g;
+print $out $header.",driveId,penaltyStatus,noplay,yardsGained,fgStatus,turnoverEvent,twoPointAttempt\n";
 while (defined(my $line =<$in>)){
   $line=~s/\n//g;
   my @line = split ',',$line;
@@ -34,14 +35,15 @@ while (defined(my $line =<$in>)){
 	my $penaltyStatus = &determinePenaltyStatus($description);
 	my $yardsGained = &determineYardsGained($description, $playType);
 	my $fieldGoalStatus = &getFieldGoalStatus($description, $playType);
+  my $extraPoint      = &determine2ptConv($description);
 
 	my $drive = 'NA';
 	my $netYardChange = 0;
-	if ($lastPos eq $off and $lastGame eq $gameid){
+	if ($lastPos eq $def and $lastGame eq $gameid){
     $drive = $driveId;
 		$netYardChange = $ydline - $lastydline;
   } else {
-		$lastPos = $off;
+		$lastPos = $def;
 		$lastGame = $gameid;
 		$driveId++;
 		$drive = $driveId;
@@ -55,7 +57,7 @@ while (defined(my $line =<$in>)){
 
   $lastydline = $ydline;
 
-	 print $out join(',',@line,$driveId,$penaltyStatus, $noplay, $yardsGained, $fieldGoalStatus, $fumble)."\n";
+	 print $out join(',',@line,$driveId,$penaltyStatus, $noplay, $yardsGained, $fieldGoalStatus, $fumble,$extraPoint)."\n";
 #print "${drive} ${playType} down=${down} togo= ${togo} gained= ${yardsGained}  offscore= ${offscore} ${description}\n";
 	#print "${drive} ${off} ${playType} yd=${ydline} time=(${min}:${sec}) offscore=$offscore ${gameid}  ${description}\n";
 

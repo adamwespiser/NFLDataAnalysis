@@ -163,11 +163,18 @@ sub determineTurnoverEvent(){
 				return "interception";
 		}
 		
-		
-	
 		return "none";
 }
-				
+		
+sub determine2ptConv(){
+		my $desc = shift;
+		if ($desc =~ m/ATTEMPT SUCCEEDS/){
+				return "good";
+		} elsif ( $desc =~ m/ATTEMPT FAILS/ ) {
+				return "nogood";
+		}
+		return "none";
+}
 								
 
 		#if ($offense eq "CLE")
