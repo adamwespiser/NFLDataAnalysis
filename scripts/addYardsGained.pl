@@ -40,6 +40,15 @@ while (defined(my $line =<$in>)){
   my $extraPoint      = &determine2ptConv($description);
   my $half            = &getHalfFromQuater($qtr);
 
+	# fix error assigning ydline when enforced penalty present in punt
+	if (( $playType eq "punt") and ($penaltyStatus eq "enforced")){
+		my $newydline = &getPuntYardLine($description,$ydline);
+		#if (not ($ydline eq $newydline)){
+		#			print "old=${ydline} new=${newydline} desc=${description}\n";
+		#}
+		$ydline = $newydline;
+  }
+
 	my $drive = 'NA';
 	my $netYardChange = 0;
 	# update driveID if onside kick(pocession won't change)

@@ -94,4 +94,18 @@ getAveYardsOnPlay <- function(dt){
 
 }
 
+getPuntYards <- function(dt){
+  DTpunt     <- DT[driveId %in% c(punt)]
+  #DTpuntPlay <- DTpunt[, .(puntPT=playType[.N],puntYD= ydline[.N],puntOFF=off[.N],puntNOPLAY=noplay[.N]),.(driveId)]
+  DTpuntPlay <- DTpunt[noplay == "play", .(puntPT=playType[.N],puntYD= ydline[.N],puntOFF=off[.N],puntNOPLAY=noplay[.N]),.(driveId)]
+  
+  setkey(DTpuntPlay, driveId)
+  DTpuntNext <- DT[driveId %in% c(punt+1),]
+  #
+  DTpuntNextPlay <- DTpuntNext[, .(lastDriveId = driveId[1] - 1, nextPT = playType[1],nextYD= (100 - ydline[1]),playDEF=def[1],playNOPLAY=noplay[1]),.(driveId)]
+  setkey(DTpuntNextPlay, lastDriveId)
+  
+  joinPlays <- DTpuntPlay[DTpuntNextPlay][puntNOPLAY == "play" ,.(.N), .(puntYD, nextYD)][order(puntYD)]
+  joinPlaysMean <-  DTpuntPlay[DTpuntNextPlay][puntNOPLAY == "play" ,.(mean(nextYD),.N), .(puntYD)][order(puntYD)]
+}
 

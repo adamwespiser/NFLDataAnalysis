@@ -34,6 +34,21 @@ sub handleReverseCalls(){
 		return $desc;
 }
 
+sub getPuntYardLine(){
+		my $desc = shift;
+		my $ydline = shift;
+		if ($desc =~ m/punts\s(-?\d+) yards +to +[A-Z]+\s(\d+)/){
+				return int($1) + int($2);
+		} elsif ( $desc =~ m/punts\s(-?\d+) +yards to endzone/){
+				return int($1);
+		} elsif ( $desc =~ m/punts\s(-?\d+) +yards to 50 Center/){
+				return int($1) + 50;
+		}
+
+		return  $ydline;
+		#print $l[0]." ".$1." ".$2." ";print " ".(int($1) + int($2))."\n";}'
+}
+
 
 
 #play types: run, pass, incompletePass, punt, kickoff, extra-point,2pt,safety
