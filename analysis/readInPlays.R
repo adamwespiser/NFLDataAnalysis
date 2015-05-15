@@ -1,6 +1,7 @@
 #!/usr/bin/R
 
 library(data.table)
+library(reshape2)
 
 dataFile <<- "/home/adam/data/nfl/2002-2011_nfl_play_type_plus.csv"
 
@@ -36,11 +37,11 @@ annotateDrives <- function(infile=dataFile){
 		DT2[driveId %in% turnoverOnDowns, driveScore := 0L]
 		DT2[driveId %in% safety, driveScore := -2L]
 
-    return DT2;
+    DT2
 }
     
-getExpectedPointsForPosition(dt){
-    DT2 = dt;  
+getExpectedPointsForPosition = function(dt){
+    DT2 = dt
   
 		safety.td <-  DT2[driveScore == -2L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)][ , .(safety=.N), .(startPos)][order(startPos)]  
 		
@@ -90,7 +91,7 @@ getAveYardsOnPlay <- function(dt){
   DTdrive <- DT2[!is.na(DT2$driveScore),]
   DTdrive[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run", "pass" ,"sack")),.(median(as.integer(yardsGained))), .(ydline)][order(ydline)]
   gainDistro = DTdrive[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run","pass","sack")),.(as.integer(yardsGained)), .(ydline,playType)][order(ydline)]
-  return dcast(gainDistro[ , .(sapply(1:20,function(x){sum(V1 >= x)/.N}),1:20), .(ydline)],ydline ~ V2,value.var="V1")
+  dcast(gainDistro[ , .(sapply(1:20,function(x){sum(V1 >= x)/.N}),1:20), .(ydline)],ydline ~ V2,value.var="V1")
 
 }
 
@@ -108,4 +109,17 @@ getPuntYards <- function(dt){
   joinPlays <- DTpuntPlay[DTpuntNextPlay][puntNOPLAY == "play" ,.(.N), .(puntYD, nextYD)][order(puntYD)]
   joinPlaysMean <-  DTpuntPlay[DTpuntNextPlay][puntNOPLAY == "play" ,.(mean(nextYD),.N), .(puntYD)][order(puntYD)]
 }
+
+goForItAlgoithm <- function(){
+  # for a given 4 down situation(togo & yardline)
+    # a = the probability of converting * expected points                          #
+    # b = the probability of failing to convert * opents expected points           # 
+    # the expected opp points after punting
+  
+  
+  
+  
+}
+
+
 
