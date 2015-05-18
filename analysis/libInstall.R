@@ -1,0 +1,5 @@
+install.packages("plyr")
+install.packages('dplyr')
+install.packages("reshape2")
+install.packages('data.table')
+install.packages('ggplot2')
