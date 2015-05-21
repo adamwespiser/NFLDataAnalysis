@@ -40,17 +40,23 @@ annotateDrives <- function(infile=dataFile){
     DT2
 }
     
-getExpectedPointsForPosition = function(dt){
+getExpectedPointsForPosition = function(dt=annotateDrives()){
     DT2 = dt
   
-		safety.td <-  DT2[driveScore == -2L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)][ , .(safety=.N), .(startPos)][order(startPos)]  
+		safety.td <-  DT2[driveScore == -2L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)
+		                  ][ , .(safety=.N), .(startPos)][order(startPos)]  
 		
-    td.td <- DT2[driveScore == 7L,.(startPos = max(ydline,na.rm=TRUE), endPos=0L), .(driveId)][ , .(td=.N), .(startPos)][order(startPos)]    
+    td.td <- DT2[driveScore == 7L,.(startPos = max(ydline,na.rm=TRUE), endPos=0L), .(driveId)
+                 ][ , .(td=.N), .(startPos)][order(startPos)]    
 		td.td[, endPos:=0L]
     setkey(td.td,startPos)
-    fg.td <- DT2[driveScore == 3L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)][ , .(fg=.N), .(startPos)][order(startPos)]    
+    
+    fg.td <- DT2[driveScore == 3L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)
+                 ][ , .(fg=.N), .(startPos)][order(startPos)]    
 		setkey(fg.td,startPos)
-    empty.td <- DT2[driveScore == 0L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)][ , .(empty=.N), .(startPos)][order(startPos)]    
+    
+		empty.td <- DT2[driveScore == 0L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)
+		                ][ , .(empty=.N), .(startPos)][order(startPos)]    
 		setkey(empty.td,startPos)
 		
 		together.td <- td.td[fg.td[empty.td]]
@@ -62,15 +68,15 @@ getExpectedPointsForPosition = function(dt){
     idx = data.table(start=100L:1L,end=100L:1L)
     setkey(idx,start,end)
     
-    setkey(td.td, startPos, endPos,td)
+    setkey(td.td, endPos, startPos)
 		td.over = foverlaps(x=idx,y=td.td,by.y=c("endPos","startPos"), by.x=c("start","end"))
     td.sum = td.over[, .(td=sum(td)), .(start)]
 	
     lfg.td <- DT2[driveScore == 3L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)][ , .(fg=.N), .(endPos,startPos)]    
 		#fg.td[,endPos:=0L]
     
-    setkey(fg.td, endPos, startPos,fg)
-		fg.over = foverlaps(x=idx,y=fg.td, by.y=c("endPos","startPos"), by.x=c("start","end"))
+    setkey(lfg.td, endPos, startPos,fg)
+		fg.over = foverlaps(x=idx,y=lfg.td, by.y=c("endPos","startPos"), by.x=c("start","end"))
 		fg.sum = fg.over[, .(fg=sum(fg)), .(start)]
     
 		empty.td <- DT2[driveScore == 0L,.(startPos = max(ydline,na.rm=TRUE), endPos=min(ydline,na.rm=TRUE)), .(driveId)][ , .(empty=.N), .(endPos,startPos)]    
@@ -83,19 +89,70 @@ getExpectedPointsForPosition = function(dt){
 		# expected point return for a given spot on the field
 		cum.td = cum.together.td[, .(expScoreCumm = (7*td + 3*fg)/(td + fg + empty), Ncumm = (td + fg + empty) ), .(start)]
 		
+		cum.td[, startPos := start]
+		setkey(cum.td, startPos)
+		setkey(start.td, startPos)
     start.td[cum.td]
 }
 
-getAveYardsOnPlay <- function(dt){
-  DT2 <- dt
-  DTdrive <- DT2[!is.na(DT2$driveScore),]
-  DTdrive[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run", "pass" ,"sack")),.(median(as.integer(yardsGained))), .(ydline)][order(ydline)]
-  gainDistro = DTdrive[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run","pass","sack")),.(as.integer(yardsGained)), .(ydline,playType)][order(ydline)]
-  dcast(gainDistro[ , .(sapply(1:20,function(x){sum(V1 >= x)/.N}),1:20), .(ydline)],ydline ~ V2,value.var="V1")
-
+getGainDistro <- function(DT){
+  gainDistro = DT[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run","pass","sack")) & penaltyStatus == "none"
+                  & turnoverEvent == "none",
+                       .(yardsGained = as.integer(yardsGained)), .(ydline,playType)][order(ydline)]
+  gainDistro
+  
 }
 
+getAveYardsOnPlayCumm <- function(dt=fread(dataFile),dcastResult=FALSE){
+  DT2 <- dt
+  DTdrive <- DT2[!is.na(DT2$driveScore),]
+  #DTdrive[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run", "pass" ,"sack")),.(median(as.integer(yardsGained))), .(ydline)][order(ydline)]
+  gainDistro = getGainDistro(DTdrive)
+  if (dcastResult == TRUE){
+    dcast(gainDistro[ , .(prGain = sapply(1:ydline,function(x){sum(yardsGained >= x)/.N}),yards = 1:ydline), .(ydline)],
+          ydline ~ yards ,value.var="prGain")
+    
+  } else {
+    gainDistro[ , .(prGain = sapply(1:ydline,function(x){sum(yardsGained >= x)/.N}),yards = 1:ydline, N=.N), .(ydline)]
+    
+  }
+  
+}
+getAveYardsOnPlay <- function(dt=fread(dataFile),dcastResult=FALSE){
+  DT2 <- dt
+  DTdrive <- DT2[!is.na(DT2$driveScore),]
+  #DTdrive[!is.na(yardsGained) & noplay == "play" & (playType %in% c("run", "pass" ,"sack")),.(median(as.integer(yardsGained))), .(ydline)][order(ydline)]
+  gainDistro = getGainDistro(DTdrive)
+  if (dcastResult == TRUE){
+    dcast(gainDistro[ , .(prGain = sapply(1:ydline,function(x){sum(yardsGained == x)/.N}),yards = 1:ydline), .(ydline)],
+          ydline ~ yards ,value.var="prGain")
+    
+  } else {
+    gainDistro[ , .(prGain = sapply(-5:ydline,function(x){sum(yardsGained == x)/.N}),yards = -5:ydline, N=.N), .(ydline)]
+    
+  }
+  
+}
+
+getNoGainTdByYdline <- function(DTdrive){
+  gainDistro = getGainDistro(DTdrive)
+  gainDistro[, .(noGain = sum(yardsGained < 0), touchDown = sum(yardsGained == ydline), N = .N,playType), .(ydline,playType)]
+}
+
+getStatsOverPlayType <- function(DTdrive){
+  gainDistro = getGainDistro(DTdrive)
+  #gainDistro = DTdrive[!is.na(yardsGained) & yardsGained > 0 & noplay == "play" & (playType %in% c("run","pass","sack")),.(yardsGained = as.integer(yardsGained)), .(ydline,playType)][order(ydline)]
+  
+  melt(gainDistro[, .(mean= mean(yardsGained), sd=sd(yardsGained)), .(ydline,playType)],id.vars=c("ydline","playType"))
+  
+  
+}
+
+
 getPuntYards <- function(dt){
+  DT = fread(dataFile)
+  punt = DT[, .("punt" == playType[.N],yardsGained[.N]), driveId][V1 == TRUE, driveId]
+  
   DTpunt     <- DT[driveId %in% c(punt)]
   #DTpuntPlay <- DTpunt[, .(puntPT=playType[.N],puntYD= ydline[.N],puntOFF=off[.N],puntNOPLAY=noplay[.N]),.(driveId)]
   DTpuntPlay <- DTpunt[noplay == "play", .(puntPT=playType[.N],puntYD= ydline[.N],puntOFF=off[.N],puntNOPLAY=noplay[.N]),.(driveId)]
@@ -106,8 +163,17 @@ getPuntYards <- function(dt){
   DTpuntNextPlay <- DTpuntNext[, .(lastDriveId = driveId[1] - 1, nextPT = playType[1],nextYD= (100 - ydline[1]),playDEF=def[1],playNOPLAY=noplay[1]),.(driveId)]
   setkey(DTpuntNextPlay, lastDriveId)
   
-  joinPlays <- DTpuntPlay[DTpuntNextPlay][puntNOPLAY == "play" ,.(.N), .(puntYD, nextYD)][order(puntYD)]
+  joinPlays <- DTpuntPlay[DTpuntNextPlay][puntNOPLAY == "play" ,.(count=.N), .(puntYD, nextYD)][order(puntYD)]
   joinPlaysMean <-  DTpuntPlay[DTpuntNextPlay][puntNOPLAY == "play" ,.(mean(nextYD),.N), .(puntYD)][order(puntYD)]
+  joinPlays
+  }
+
+
+getFGpercent <- function(){
+    DT = fread(dataFile)
+    fgGood = DT[noplay=="play", .("good" == fgStatus[which(playType == "field goal")]),by=.(driveId)][V1 == TRUE, driveId]
+    fgBad = DT[noplay=="play", .(fgStatus[which(playType == "field goal")] %in% c("nogood","block")),by=.(driveId)][V1 == TRUE, driveId]
+    DTfg = DT[noplay=="play" & playType == "field goal"]
 }
 
 goForItAlgoithm <- function(){
