@@ -1,3 +1,4 @@
 *un~
 *.swp
 .Rproj.user
+packrat/lib*/
