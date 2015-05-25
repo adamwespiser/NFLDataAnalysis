@@ -4,12 +4,10 @@ use warnings;
 use strict;
 use Getopt::Long;
 
-use lib '/home/adam/programming/github/NFLDataAnalysis';
+use lib '/home/adam/work/projects/NFLDataAnalysis/scripts';
 use nfl; 
 
 
-#use lib '/users/dcaffrey/bin';
-# # # # # # # DESCRIPTION # # # # # # # 
 #this code is designed to 
 
 my ($inFile,$outFile);
@@ -18,11 +16,12 @@ my ($in, $out);
 if (!defined $inFile){ print STDERR "\n\-i option was not specified\n";&usage;}
 unless(open  $in, '<' ,$inFile){ print STDERR ("Could not open $inFile\n");&usage;}
 
-  my $dir = "/home/adam/programming/github/NFLDataAnalysis/data/nflGamePages/";
+  my $dir = "/home/adam/data/nfl/gamePages/";
   my $lcToAbr = &getTeamLcToAbrHash();
-#  for my $key (keys %$lcToAbr){
-#    print $lcToAbr->{$key}." ".$key."\n";
-#  }
+  for my $key (keys %$lcToAbr){
+    print $lcToAbr->{$key}." ".$key."\n";
+  }
+#exit;
 my $header = <$in>;
 my $found = 0;
 my $missing = 0;
@@ -41,7 +40,8 @@ while (defined(my $line =<$in>)){
   my $playId = "${year}${month}${day}_${awayAbr}\@${homeAbr}";
   my $cmd = "wget ${gameURL} -O ${weekDir}/${playId}.html 2>&1 > /dev/null";
   print "$date $awayTeam\@$homeTeam\n" ;
-  system($cmd);
+	print $cmd."\n";
+	system($cmd);
 }
 close($in);
 
@@ -50,8 +50,8 @@ print STDERR "\n\n";
 print STDERR "This script ...\n";
 print STDERR "Usage:\n\n";
 print STDERR "\n";
-print STDERR "perl $0 [-i inFile] [-o outFile] \n";
-print STDERR "cp \n";
-print STDERR "perl $0 -i  -o  \n";
+print STDERR "perl $0 [-i inFile]\n";
+print STDERR "cd into project dir, then:\n";
+print STDERR "perl script/downloadGameURL.pl -i data/nflUrlLinks.csv\n";
 exit;
 }
