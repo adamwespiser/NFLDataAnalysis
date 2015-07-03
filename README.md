@@ -15,7 +15,7 @@
 		a = go for it (expected team points - expected opp points)
     b = punt      (        0            - expected opp points)
 		if a/b < 1, then go for it is favorable
-
+5) What is the fumble rate of different football teams? Are the patriots really an outlier, could ball inflation explain this effect?
 
 
 library(data.table)
