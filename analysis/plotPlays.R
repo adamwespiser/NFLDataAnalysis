@@ -3,7 +3,6 @@ library(ggplot2)
 source("./analysis/readInPlays.R")
 
 # yards per play
-
 prepDataTable <- function(){
   DT <- annotateDrives()
   DTdrive <- DT[! is.na(driveScore)]
@@ -12,6 +11,10 @@ prepDataTable <- function(){
   #DTdrivePlays
 }
   
+# -> ./plots/basicStats
+# all the basic plots, 
+# yards gained at position
+# punting, probability of outcomes, etc
 plotBasicYardage <- function(){
   DTdrive <- prepDataTable()
   DTdrivePlays <- DTdrive[playType %in% c("pass", "run", "sack")]
