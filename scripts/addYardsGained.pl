@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use Getopt::Long;
 
-use lib '/home/adam/work/projects/NFLDataAnalysis/scripts';
+use lib './scripts';
 use nfl; 
 
 
